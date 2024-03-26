@@ -1,29 +1,34 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
+const tasksRoutes = require("./routes/tasks");
+
+// express app
 const app = express();
 
-const uri =
-  "mongodb+srv://root:e0ZYdBvlxWtGfmmV@daily-log-mern.kq2ii3r.mongodb.net/?retryWrites=true&w=majority&appName=Daily-Log-MERN";
+// listening port
+const PORT = process.env.PORT;
+const uri = process.env.MONGO_URI;
 
-async function connect() {
-  try {
-    await mongoose.connect(uri);
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-connect();
-
-app.get("/api", (req, res) => {
-  res.json({ users: ["userOne", "userTwo", "userThree"] });
+//  middleware
+app.use(express.json());
+app.use((req, res, next) => {
+  console.log(req.path, req.method);
+  next();
 });
 
-app.listen(5000, () => {
-  console.log("Server started on port 5000");
-});
+app.use(tasksRoutes);
+app.use("/api/logs", tasksRoutes);
 
-app.get("/prueba", (req, res) => {
-  res.json({ x: ["Carlos", "Axa", "Sigfredo"] });
-});
+mongoose
+  .connect(uri)
+  .then(() => {
+    // listen for requests
+    app.listen(PORT, () => {
+      console.log("Connected to DB & started on port", PORT);
+    });
+  })
+  .catch((error) => {
+    console.log(error);
+  });
